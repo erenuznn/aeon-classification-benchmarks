@@ -3,9 +3,19 @@ import pyarrow
 from pathlib import Path
 import numpy as np
 
+# ==========================================
+# --- Configuration Parameter ---
+# Define how many days of data each CSV chunk will contain (Range: 1 to 12)
+DAYS_PER_CHUNK = 12
+# ==========================================
+
+if not (1 <= DAYS_PER_CHUNK <= 12):
+    raise ValueError("Termination: The parameter DAYS_PER_CHUNK must be between 1 and 12.")
+
 # --- Setup ---
-root = Path("YOUR PATH")
-output_dir = root / "combined_csv_12day_chunks"
+root = Path("PATH")
+# Dynamically name the output folder based on the chosen parameter
+output_dir = root / f"combined_csv_{DAYS_PER_CHUNK}day_chunks"
 output_dir.mkdir(exist_ok=True)
 
 plant_data = {}
@@ -24,13 +34,13 @@ for parquet_file in root.rglob("*.parquet"):
     else:
         plant_data[plant_id] = pd.concat([plant_data[plant_id], df], ignore_index=True)
 
-# --- CSV Output with 12-Day Chunking ---
+# --- CSV Output with Dynamic Day Chunking ---
 
-# Calculate the size of a 12-day chunk in terms of rows (1 second interval)
-# 12 days * 24 hours/day * 60 minutes/hour * 60 seconds/minute = 1,036,800 rows
-ROWS_PER_CHUNK = 12 * 24 * 60 * 60
+# Calculate the size of the chunk in terms of rows (1 Hz = 1 row per second)
+# days * 24 hours/day * 60 minutes/hour * 60 seconds/minute
+ROWS_PER_CHUNK = DAYS_PER_CHUNK * 24 * 60 * 60
 
-print(f"INFO: Each output CSV file will contain approximately {ROWS_PER_CHUNK:,} rows.")
+print(f"INFO: Parameter set to {DAYS_PER_CHUNK} day(s). Each CSV chunk will contain up to {ROWS_PER_CHUNK:,} rows.")
 
 for plant_id, df in plant_data.items():
     # Final data cleaning and sorting
@@ -66,4 +76,4 @@ for plant_id, df in plant_data.items():
         chunk_df.to_csv(output_file, index=False)
         print(f"  -> Created file {i + 1}/{num_chunks}: {output_file.name} (Rows: {len(chunk_df):,})")
 
-print("Partitioned CSV files successfully created for each plant!")
+print(f"Partitioned {DAYS_PER_CHUNK}-day CSV chunks successfully created for each plant!")
