@@ -3,14 +3,14 @@ import pyarrow
 from pathlib import Path
 import numpy as np
 
-# --- Setup (Same as original code) ---
-root = Path("/Users/erenuzun/Desktop/Thesis/ML/DATA/test_data/vivent46/1sec")
+# --- Setup ---
+root = Path("YOUR PATH")
 output_dir = root / "combined_csv_12day_chunks"
 output_dir.mkdir(exist_ok=True)
 
 plant_data = {}
 
-# --- Parquet File Processing and Aggregation (Same as original code) ---
+# --- Parquet File Processing and Aggregation ---
 for parquet_file in root.rglob("*.parquet"):
     plant_id = parquet_file.parent.name
     df = pd.read_parquet(parquet_file)
@@ -66,4 +66,4 @@ for plant_id, df in plant_data.items():
         chunk_df.to_csv(output_file, index=False)
         print(f"  -> Created file {i + 1}/{num_chunks}: {output_file.name} (Rows: {len(chunk_df):,})")
 
-print("✅ Partitioned CSV files successfully created for each plant!")
+print("Partitioned CSV files successfully created for each plant!")
