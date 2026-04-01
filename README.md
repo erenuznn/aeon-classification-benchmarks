@@ -1,13 +1,14 @@
 # aeon-classification-benchmarks
 
 ## Objective
-This repository contains execution pipelines for comparing the classification performance, computational time, and memory allocation of feature-based (Catch22) and convolution-based (ROCKET) machine learning algorithms. It also includes an automated data preprocessing pipeline for formatting continuous raw sensor data into discrete arrays suitable for time-series classification.
+This repository contains execution pipelines for comparing the classification performance, computational time, memory allocation, and noise robustness of feature-based (Catch22) and convolution-based (ROCKET) machine learning algorithms. It also includes an automated data preprocessing pipeline for formatting continuous raw sensor data into discrete arrays suitable for time-series classification.
 
 ## Execution Scripts and Datasets
 
 ### Benchmarking Modules
 * **`benchmark_small_scale.py`:** Utilizes the ArrowHead dataset (3 classes, 211 total instances, univariate). Executes baseline accuracy and training speed comparisons between Catch22 and ROCKET models.
 * **`benchmark_large_scale.py`:** Utilizes the Crop dataset (24 classes, 24,000 total instances, univariate). Integrates the `tracemalloc` library to profile peak RAM allocation alongside accuracy and computational speed. Outputs a dual-axis performance chart and a 24-class confusion matrix.
+* **`benchmark_noisy_data.py`:** Evaluates algorithmic robustness against data corruption using the ArrowHead dataset. Injects synthetic Additive White Gaussian Noise (AWGN) across a multi-stage sequence (factors 0.0 to 1.0) and generates a line chart visualizing the accuracy degradation trajectories for Catch22 and ROCKET.
 
 ### Data Processing Pipeline
 The data processing architecture is controlled via a centralized master script.
@@ -25,6 +26,7 @@ Execution of all modules requires the following dependencies installed in the lo
 * `pyarrow`
 * `plotly`
 * `scipy`
+* `numpy`
 
 ## Execution Protocol
 To process raw sensor data, configure the parameters within `master_pipeline.py` and execute the script via terminal:
