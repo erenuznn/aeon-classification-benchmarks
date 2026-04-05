@@ -62,4 +62,4 @@ def execute_chunking(raw_data_path, days_per_chunk):
         return output_dir
 
     if __name__ == "__main__":
-        execute_chunking("PATH", 12)
+        execute_chunking("/Users/erenuzun/Desktop/Thesis/ML/DATA/test_data/vivent46/1sec", 12)

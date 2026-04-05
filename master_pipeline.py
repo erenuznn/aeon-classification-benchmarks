@@ -6,7 +6,7 @@ import Preprocessing_and_Comparison
 # ==========================================
 
 # Phase 1 Parameters
-RAW_DATA_ROOT = "PATH"
+RAW_DATA_ROOT = "/Users/erenuzun/Desktop/Thesis/ML/DATA/test_data/vivent46/1sec"
 DAYS_PER_CHUNK = 12
 
 # Phase 2 Parameters

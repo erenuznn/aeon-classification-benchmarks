@@ -87,7 +87,7 @@ PLANT_IDENTIFIER = "25072205-1"
 
 # 2. Replace the path below with the directory containing the plant_id subfolders.
 # This should be the 'combined_csv_12day_chunks' folder created in the previous step.
-BASE_DIR = Path("PATH")
+BASE_DIR = Path("/Users/erenuzun/Desktop/Thesis/ML/DATA/test_data/vivent46/1sec/combined_csv_12day_chunks")
 
 # 3. Define the full paths to the chunked CSV files for the specified plant.
 # Adjust the dates and number of chunks (1, 2, 3, etc.) as necessary.
