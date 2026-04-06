@@ -20,7 +20,7 @@ def execute_rocket_classification(ts_file_path, test_fraction=0.2):
     print("-" * 50)
     print("Initiating unilateral data ingestion sequence.")
     # Standard aeon ingestion for .ts files
-    X, y = load_from_tsfile(ts_file_path)
+    X, y = load_from_ts_file(ts_file_path)
 
     print(f"Total unilateral instances extracted: {X.shape[0]}")
     print(f"Temporal dimension per instance: {X.shape[2]}")
