@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import numpy as np
 from scipy.signal import savgol_filter
+from scipy.stats import zscore
 
 
 def remove_spikes(signal, threshold_std):
@@ -18,6 +19,7 @@ def remove_spikes(signal, threshold_std):
 
     if spike_mask.any():
         x_indices = np.arange(len(signal))
+        # Interpolate across the spike
         cleaned[spike_mask] = np.interp(x_indices[spike_mask], x_indices[~spike_mask], signal[~spike_mask])
         print(f"STATUS: Removed {spike_mask.sum()} spikes using Z-score threshold {threshold_std}.")
     else:
@@ -26,13 +28,25 @@ def remove_spikes(signal, threshold_std):
 
 
 def filter_signal(signal, threshold_std, savgol_window, savgol_poly):
+    """
+    Executes the unilateral math pipeline: Despike -> Normalize -> Smooth
+    """
+    # 1. Remove extreme biological artifacts
     despiked = remove_spikes(signal, threshold_std)
-    if len(despiked) > savgol_window:
+
+    # 2. Individual Plant Normalization (Z-Score)
+    print("STATUS: Applying Z-Score Normalization to the despiked signal...")
+    # This transforms the signal to have a mean of 0 and std of 1
+    normalized = zscore(despiked)
+
+    # 3. Apply Local Polynomial Smoothing (Savitzky-Golay)
+    if len(normalized) > savgol_window:
         print(f"STATUS: Applying Savitzky-Golay filter (Window={savgol_window}, Poly={savgol_poly})...")
-        smooth = savgol_filter(despiked, savgol_window, savgol_poly)
+        smooth = savgol_filter(normalized, savgol_window, savgol_poly)
     else:
         print("WARNING: Signal too short for Savitzky-Golay window. Skipping smoothing.")
-        smooth = despiked
+        smooth = normalized
+
     return smooth
 
 
@@ -79,6 +93,7 @@ def process_data(file_paths, threshold_std, savgol_window, savgol_poly):
     print(f"STATUS: Raw data count: {len(full_df)} rows.")
 
     signal_raw = full_df['metric_value'].values
+    # Execute the updated processing pipeline
     signal_processed = filter_signal(signal_raw, threshold_std, savgol_window, savgol_poly)
 
     processed_df = full_df.copy()
@@ -96,27 +111,40 @@ def plot_data_span(raw_df, processed_df, output_html, plot_days_span):
     plot_raw = raw_df[raw_df['timestamp'] >= start_time]
 
     fig = go.Figure()
+
+    # Optional visual fix: Since the processed signal is now normalized (centered at 0)
+    # and the raw signal is still in original microvolts, they will look separated on the Y-axis.
+    # This is expected behavior and proves the normalization worked.
     fig.add_trace(go.Scattergl(
         x=plot_raw['timestamp'], y=plot_raw['metric_value'],
         mode='lines', name='Raw Signal',
         line=dict(color='gray', width=1), opacity=0.5
     ))
+
+    # We map this to a secondary Y-axis to easily visualize both scales together
     fig.add_trace(go.Scattergl(
         x=plot_processed['timestamp'], y=plot_processed['metric_value'],
-        mode='lines', name='Processed (Despiked + SavGol)',
-        line=dict(color='blue', width=2), opacity=0.9
+        mode='lines', name='Processed (Normalized)',
+        line=dict(color='blue', width=2), opacity=0.9,
+        yaxis="y2"
     ))
 
     fig.update_layout(
-        title=f"Signal Processing: Z-Score Despiking & Savitzky-Golay (Last {plot_days_span} Days)",
-        xaxis_title="Timestamp", yaxis_title="EP Reading",
+        title=f"Signal Processing: Z-Score Normalized & Smoothed (Last {plot_days_span} Days)",
+        xaxis_title="Timestamp",
+        yaxis_title="Raw EP Reading (µV)",
+        yaxis2=dict(
+            title="Normalized Amplitude (Z-Score)",
+            overlaying="y",
+            side="right"
+        ),
         template="plotly_white", hovermode="x unified",
         legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
     )
 
     print(f"STATUS: Saving interactive plot to {output_html}...")
     fig.write_html(str(output_html))
-    fig.show()
+    # fig.show()  # Uncomment if you want it to automatically open in your browser
 
 
 def execute_processing(base_dir, plant_identifier, threshold_std, savgol_window, savgol_poly, plot_days_span):
